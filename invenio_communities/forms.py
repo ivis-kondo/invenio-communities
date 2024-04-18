@@ -26,12 +26,42 @@
 
 from __future__ import absolute_import, print_function
 
+import re
+
 from flask_babelex import gettext as _
 from flask_wtf import Form
 from wtforms import FileField, HiddenField, StringField, TextAreaField, \
     validators
+from wtforms.validators import ValidationError
 
 from .models import Community
+
+
+def _validate_input_id(form, field):
+    the_patterns = {
+        "ASCII_LETTER_PATTERN": "[a-zA-Z0-9_-]+$",
+        "FIRST_LETTER_PATTERN1": "^[a-zA-Z_-].*",
+        "FIRST_LETTER_PATTERN2": "^[-]+[0-9]+",
+    }
+    the_result = {
+        "ASCII_LETTER_PATTERN": "Don't use space or special "
+                                "character except `-` and `_`.",
+        "FIRST_LETTER_PATTERN1": 'The first character cannot '
+                                 'be a number or special character. '
+                                 'It should be an '
+                                 'alphabet character, "-" or "_"',
+        "FIRST_LETTER_PATTERN2": "Cannot set negative number to ID.",
+    }
+
+    m = re.match(the_patterns['FIRST_LETTER_PATTERN1'], field.data)
+    if m is None:
+        raise ValidationError(the_result['FIRST_LETTER_PATTERN1'])
+    m = re.match(the_patterns['FIRST_LETTER_PATTERN2'], field.data)
+    if m is not None:
+        raise ValidationError(the_result['FIRST_LETTER_PATTERN2'])
+    m = re.match(the_patterns['ASCII_LETTER_PATTERN'], field.data)
+    if m is None:
+        raise ValidationError(the_result['ASCII_LETTER_PATTERN'])
 
 
 class CommunityForm(Form):
@@ -40,7 +70,8 @@ class CommunityForm(Form):
     field_sets = [
         ('Information',
          ['identifier', 'title', 'description', 'curation_policy', 'page',
-          'logo', ],
+          'community_header', 'community_footer', 'logo',
+          'index_checked_nodeId'],
          {'classes': 'in'}),
     ]
 
@@ -95,22 +126,17 @@ class CommunityForm(Form):
     #
     identifier = StringField(
         label=_('Identifier'),
-        description=_('Required. Only letters, numbers and dash are allowed.'
-                      ' The identifier is used in the URL for the community'
+        description=_('The identifier is used in the URL for the community'
                       ' collection, and cannot be modified later.'),
         validators=[validators.DataRequired(),
                     validators.length(
                         max=100,
-                        message=_('The identifier must be less'
-                                  ' than 100 characters long.')),
-                    validators.regexp(
-                        u'^[-\w]+$',
                         message=_(
-                            'Only letters, numbers and dash are allowed'))]
+                            'Field cannot be longer than 100 characters.')),
+                    _validate_input_id]
     )
 
     title = StringField(
-        description=_('Required.'),
         validators=[validators.DataRequired()]
     )
 
@@ -148,17 +174,20 @@ class CommunityForm(Form):
             'Max file size: 1.5 MB')
     )
 
+    index_checked_nodeId = HiddenField(
+        label=_('')
+    )
+
     #
     # Validation
     #
     def validate_identifier(self, field):
         """Validate field identifier."""
-        if field.data:
-            field.data = field.data.lower()
-            if Community.get(field.data, with_deleted=True):
-                raise validators.ValidationError(
-                    _('The identifier already exists. '
-                      'Please choose a different one.'))
+        field.data = field.data.lower()
+        if Community.get(field.data, with_deleted=True):
+            raise validators.ValidationError(
+                _('The identifier already exists. '
+                  'Please choose a different one.'))
 
 
 class EditCommunityForm(CommunityForm):

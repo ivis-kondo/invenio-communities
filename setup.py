@@ -34,19 +34,14 @@ readme = open('README.rst').read()
 history = open('CHANGES.rst').read()
 
 tests_require = [
-    'Flask-CeleryExt>=0.3.2',
-    'check-manifest>=0.25',
-    'coverage>=4.5.3',
-    'invenio-db>=1.0.3',
-    'invenio-mail>=1.0.2',
-    'invenio-oaiserver>=1.0.3',
-    'isort>=4.3.3',
-    'mock>=1.3.0',
-    'pydocstyle>=1.0.0',
-    'pytest-cache>=1.0',
-    'pytest-cov>=2.7.1',
-    'pytest-pep8>=1.0.6',
+    'coverage>=4.5.3,<5.0.0',
+    'mock>=3.0.0,<4.0.0',
     'pytest>=4.6.4,<5.0.0',
+    'pytest-cache',
+    'pytest-cov',
+    'pytest-pep8',
+    'pytest-invenio',
+    'responses',
 ]
 
 invenio_search_version = '1.2.2'
@@ -64,18 +59,18 @@ extras_require = {
     'oai': [
         'invenio-oaiserver>=1.0.3',
     ],
-    'elasticsearch2': [
-        'invenio-search[elasticsearch2]>={}'.format(invenio_search_version),
-    ],
-    'elasticsearch5': [
-        'invenio-search[elasticsearch5]>={}'.format(invenio_search_version),
-    ],
-    'elasticsearch6': [
-        'invenio-search[elasticsearch6]>={}'.format(invenio_search_version),
-    ],
-    'elasticsearch7': [
-        'invenio-search[elasticsearch7]>={}'.format(invenio_search_version),
-    ],
+    # 'elasticsearch2': [
+    #     'invenio-search[elasticsearch2]>={}'.format(invenio_search_version),
+    # ],
+    # 'elasticsearch5': [
+    #     'invenio-search[elasticsearch5]>={}'.format(invenio_search_version),
+    # ],
+    # 'elasticsearch6': [
+    #     'invenio-search[elasticsearch6]>={}'.format(invenio_search_version),
+    # ],
+    # 'elasticsearch7': [
+    #     'invenio-search[elasticsearch7]>={}'.format(invenio_search_version),
+    # ],
     'tests': tests_require,
 }
 
@@ -97,14 +92,16 @@ install_requires = [
     'bleach>=2.1.3',
     'Flask-BabelEx>=0.9.3',
     'Flask>=0.11.1',
+    # 'elasticsearch-dsl>=6.0.0,<7.0.0',
+    # 'elasticsearch>=6.0.0,<7.0.0',
     'invenio-access>=1.1.0',
     'invenio-accounts>=1.1.0',
-    'invenio-assets>=1.0.0',
     'invenio-files-rest>=1.0.0b1',
     'invenio-indexer>=1.0.2',
     'invenio-pidstore>=1.0.0',
     'invenio-records>=1.2.0',
     'invenio-rest[cors]>=1.0.0',
+    # 'invenio-search>=1.0.0a9',
     'marshmallow>=2.15.0,<3',
 ]
 
@@ -160,7 +157,11 @@ setup(
         ],
         'invenio_assets.bundles': [
             'invenio_communities_js = invenio_communities.bundles:js',
+            'invenio_communities_js_tree = invenio_communities.bundles:js_tree',
+            'invenio_communities_js_tree_display = invenio_communities.bundles:js_tree_display',
             'invenio_communities_css = invenio_communities.bundles:css',
+            'invenio_communities_css_tree = invenio_communities.bundles:css_tree',
+            'invenio_communities_css_tree_display = invenio_communities.bundles:css_tree_display',
         ]
     },
     extras_require=extras_require,

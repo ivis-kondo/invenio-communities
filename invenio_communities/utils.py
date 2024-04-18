@@ -31,6 +31,7 @@ from math import ceil
 from uuid import UUID
 
 from flask import current_app
+from flask_login import current_user
 from invenio_db import db
 from invenio_files_rest.errors import FilesException
 from invenio_files_rest.models import Bucket, Location, ObjectVersion
@@ -67,8 +68,8 @@ class Pagination(object):
         last = 0
         for num in range(1, self.pages + 1):
             if num <= left_edge or \
-               (num > self.page - left_current - 1 and
-                num < self.page + right_current) or \
+               (num > self.page - left_current - 1
+                and num < self.page + right_current) or \
                num > self.pages - right_edge:
                 if last + 1 != num:
                     yield None
@@ -132,12 +133,15 @@ def initialize_communities_bucket():
             bucket_id))
     else:
         storage_class = current_app.config['FILES_REST_DEFAULT_STORAGE_CLASS']
-        location = Location.get_default()
-        bucket = Bucket(id=bucket_id,
-                        location=location,
-                        default_storage_class=storage_class)
-        db.session.add(bucket)
-        db.session.commit()
+        try:
+            location = Location.get_default()
+            bucket = Bucket(id=bucket_id,
+                            location=location,
+                            default_storage_class=storage_class)
+            db.session.add(bucket)
+            db.session.commit()
+        except Exception as ex:
+            db.session.rollback()
 
 
 def format_request_email_templ(increq, template, **ctx):
@@ -217,8 +221,20 @@ def send_community_request_email(increq):
     msg = Message(
         msg_title,
         sender=sender,
-        recipients=[increq.community.owner.email, ],
+        recipients=[increq.community.owner_user.email, ],
         body=msg_body
     )
 
     send_email.delay(msg.__dict__)
+
+
+def get_user_role_ids():
+    """Get role.id of current user.
+
+    :returns role_ids: List of role.id.
+    """
+    role_ids = []
+    if current_user and current_user.is_authenticated:
+        role_ids = [role.id for role in current_user.roles]
+
+    return role_ids
